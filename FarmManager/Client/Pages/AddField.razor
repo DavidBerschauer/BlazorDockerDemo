@@ -1,0 +1,68 @@
+﻿@page "/field/add"
+@page "/field/edit/{fieldId:guid}"
+@using FarmManager.Shared
+@using FarmManager.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>@Title Field</PageTitle>
+
+<h1>@Title Field</h1>
+
+<EditForm Model="@field" OnValidSubmit="SaveField">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="field.Name" />
+        </div>
+        <ValidationMessage For="@(() => field.Name)" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button class="btn btn-light" @onclick="Cancel">Cancel</button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Guid? fieldId { get; set; }
+    protected string Title = "Add";
+    protected Field field = new();
+    bool isNew = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (fieldId != null)
+        {
+            Title = "Edit";
+            var existingField = await Http.GetFromJsonAsync<Field>("api/Fields/" + fieldId);
+            if (existingField == null)
+            {
+                Console.WriteLine("Error: existing field is null");
+            }
+            else
+            {
+                isNew = false;
+                field = existingField;
+            }
+        }
+    }
+    protected async Task SaveField()
+    {
+        if (isNew)
+        {
+            await Http.PostAsJsonAsync("api/Fields/", field);
+        }
+        else
+        {
+            await Http.PutAsJsonAsync("api/Fields/" + field.Id, field);
+        }
+        Cancel();
+    }
+    public void Cancel()
+    {
+        NavigationManager.NavigateTo("/fields");
+    }
+}
+

@@ -1,0 +1,40 @@
+version: '3.4'
+
+networks:
+  farm-manager:
+    driver: bridge 
+
+services:
+  farm-manager-service:
+    image: davidberschauer/farm-manager:linux-latest
+    depends_on:
+      - "farm-manager-db"
+    container_name: farm-manager-service
+    ports:
+      - "5009:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_URLS=http://+
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FarmsConnectionString=host=farm-manager-db;port=5432;database=farm-manager;username=postgres;password=postgres;Pooling=true;
+    networks:
+      - farm-manager
+
+  farm-manager-db:
+    image: postgres:latest
+    container_name: farm-manager-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=employee
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - customer_data:/var/lib/postgresql/data/ 
+    networks:
+      - farm-manager
+
+volumes:
+  customer_data:
+

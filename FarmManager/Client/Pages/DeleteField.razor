@@ -1,0 +1,61 @@
+﻿@page "/field/delete/{fieldId:guid}"
+@using FarmManager.Shared
+@using FarmManager.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete Field</PageTitle>
+
+<h1>Delete Field</h1>
+<br />
+<div class="form-group">
+    <h4>Do you want to delete this field?</h4>
+    <table class="table">
+        <tbody>
+            <tr>
+                <td>Name</td>
+                <td>@field.Name</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class="form-group">
+    <input type="submit" value="Delete" @onclick="(async () => await RemoveField(field.Id))" class="btn btn-danger" />
+    <input type="submit" value="Cancel" @onclick="(() => Cancel())" class="btn btn-warning" />
+</div>
+
+@code {
+    [Parameter]
+    public Guid? fieldId { get; set; }
+    protected string Title = "Add";
+    protected Field field = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (fieldId != null)
+        {
+            Title = "Edit";
+            var existingField = await Http.GetFromJsonAsync<Field>("api/Fields/" + fieldId);
+            if (existingField == null)
+            {
+                //TODO Fehler meldne und zurück
+                Console.WriteLine("Error: existing field is null");
+            }
+            else
+            {
+                field = existingField;
+            }
+        }
+    }
+    protected async Task RemoveField(Guid fieldID)
+    {
+        await Http.DeleteAsync("api/Fields/" + fieldID);
+        NavigationManager.NavigateTo("/fields");
+    }
+
+    public void Cancel()
+    {
+        NavigationManager.NavigateTo("/fields");
+    }
+}
+
